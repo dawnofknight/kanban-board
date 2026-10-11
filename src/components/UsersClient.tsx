@@ -32,6 +32,7 @@ export function UsersClient() {
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [rowError, setRowError] = useState<string | null>(null);
+  const [rowInfo, setRowInfo] = useState<string | null>(null);
 
   useEffect(() => {
     if (ready && !user) router.push("/login");
@@ -84,8 +85,14 @@ export function UsersClient() {
       return;
     }
     setRowError(null);
+    setRowInfo(null);
+    const selfEmailChange =
+      id === user?.id && editEmail.trim().toLowerCase() !== user?.email.toLowerCase();
     updateUser(id, { name: editName.trim(), email: editEmail.trim() });
     setEditingId(null);
+    if (selfEmailChange) {
+      setRowInfo(`Your login email is now ${editEmail.trim()} — use the new address next time you log in.`);
+    }
   }
 
   async function remove(id: string, displayName: string) {
@@ -182,6 +189,7 @@ export function UsersClient() {
                         setEditEmail(u.email);
                         setEditingId(u.id);
                         setRowError(null);
+                        setRowInfo(null);
                       }}
                       className="rounded-lg bg-white p-2 text-slate-500 shadow-sm hover:text-blue-600"
                       title="Edit name/email"
@@ -202,6 +210,7 @@ export function UsersClient() {
             );
           })}
           {rowError && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{rowError}</p>}
+          {rowInfo && <p className="rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-700">{rowInfo}</p>}
         </div>
       </div>
 
