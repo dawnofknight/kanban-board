@@ -34,6 +34,7 @@ interface State {
   login: (email: string, password: string) => Promise<string | null>;
   register: (name: string, email: string, password: string, role?: User["role"]) => Promise<string | null>;
   logout: () => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<string | null>;
   updateUserRole: (userId: string, role: User["role"]) => void;
 
   setActiveBoard: (id: string | null) => void;
@@ -180,6 +181,18 @@ export const useStore = create<State>()((set, get) => ({
       // ignore — local state is cleared regardless
     }
     set({ ...EMPTY, activeBoardId: null, activeCardId: null, ready: true });
+  },
+  changePassword: async (currentPassword, newPassword) => {
+    const res = await fetch("/api/auth/change-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    if (!res.ok) {
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      return data?.error ?? "Failed to change password";
+    }
+    return null;
   },
   updateUserRole: (userId, role) => {
     set({ users: get().users.map((u) => (u.id === userId ? { ...u, role } : u)) });

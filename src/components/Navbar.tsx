@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { KanbanSquare, LayoutDashboard, Users, LogOut, RotateCcw } from "lucide-react";
+import { KanbanSquare, LayoutDashboard, Users, LogOut, RotateCcw, Settings } from "lucide-react";
 import { useStore, useCurrentUser } from "@/lib/store";
 import { initials } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -45,15 +45,24 @@ export function Navbar() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          <button
-            onClick={() => {
-              if (confirm("Reset demo data? This clears all local changes.")) resetDemo();
-            }}
-            title="Reset demo data"
-            className="hidden rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-white sm:block"
+          {user.role === "admin" && (
+            <button
+              onClick={() => {
+                if (confirm("Reset demo data? This clears all workspace data.")) void resetDemo();
+              }}
+              title="Reset demo data"
+              className="hidden rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-white sm:block"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </button>
+          )}
+          <Link
+            href="/settings"
+            className="rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-white"
+            title="Account settings"
           >
-            <RotateCcw className="h-4 w-4" />
-          </button>
+            <Settings className="h-4 w-4" />
+          </Link>
           <div className="flex items-center gap-2 rounded-full bg-white/10 py-1 pl-1 pr-3">
             <span className={cn("grid h-7 w-7 place-items-center rounded-full text-[11px] font-bold text-white", user.avatarColor)}>
               {initials(user.name)}
