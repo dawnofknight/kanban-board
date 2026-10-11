@@ -1,9 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* local-first kanban: fully client-rendered, no static prerender for app routes */
+  /* kanban app is fully client-rendered; no static prerender for app routes */
   cacheComponents: false,
-  // partialPrefetching requires cacheComponents; disabled for local-first app
+  // partialPrefetching requires cacheComponents; disabled for this app
   turbopack: {
     rules: {
       "*.css": {
@@ -15,3 +15,6 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
+initOpenNextCloudflareForDev();

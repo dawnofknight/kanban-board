@@ -1,15 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { KanbanSquare } from "lucide-react";
-import { useStore } from "@/lib/store";
+import { useStore, useCurrentUser } from "@/lib/store";
 
 export function LoginClient() {
   const login = useStore((s) => s.login);
   const register = useStore((s) => s.register);
   const users = useStore((s) => s.users);
+  const ready = useStore((s) => s.ready);
+  const currentUser = useCurrentUser();
   const router = useRouter();
+
+  useEffect(() => {
+    if (ready && currentUser) router.replace("/boards");
+  }, [ready, currentUser, router]);
 
   const [mode, setMode] = useState<"login" | "register">("login");
   const [name, setName] = useState("");
@@ -18,27 +24,36 @@ export function LoginClient() {
   const [role, setRole] = useState<"admin" | "member" | "client">("member");
   const [error, setError] = useState<string | null>(null);
 
-  function submit(e: React.FormEvent) {
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (mode === "login") {
-      const err = login(email, password);
-      if (err) setError(err);
-      else router.push("/boards");
-    } else {
-      if (!name.trim()) {
-        setError("Enter your name");
-        return;
+    setBusy(true);
+    try {
+      if (mode === "login") {
+        const err = await login(email, password);
+        if (err) setError(err);
+        else router.push("/boards");
+      } else {
+        if (!name.trim()) {
+          setError("Enter your name");
+          return;
+        }
+        const err = await register(name.trim(), email.trim(), password, role);
+        if (err) setError(err);
+        else router.push("/boards");
       }
-      const err = register(name.trim(), email.trim(), password, role);
-      if (err) setError(err);
-      else router.push("/boards");
+    } finally {
+      setBusy(false);
     }
   }
 
-  function quickLogin(email: string) {
-    const err = login(email, "password");
-    if (!err) router.push("/boards");
+  async function quickLogin(email: string) {
+    setError(null);
+    const err = await login(email, "password");
+    if (err) setError(err);
+    else router.push("/boards");
   }
 
   return (
@@ -120,8 +135,8 @@ export function LoginClient() {
             </select>
           )}
           {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
-          <button className="rounded-xl bg-slate-900 py-3 text-sm font-bold text-white hover:bg-slate-700">
-            {mode === "login" ? "Log in" : "Sign up"}
+          <button disabled={busy} className="rounded-xl bg-slate-900 py-3 text-sm font-bold text-white hover:bg-slate-700 disabled:opacity-60">
+            {busy ? "Please wait..." : mode === "login" ? "Log in" : "Sign up"}
           </button>
         </form>
         <button

@@ -25,6 +25,7 @@ export function BoardDetailClient({ boardId }: { boardId: string }) {
   );
   const updateBoard = useStore((s) => s.updateBoard);
   const currentUser = useCurrentUser();
+  const ready = useStore((s) => s.ready);
   const router = useRouter();
 
   const [showSettings, setShowSettings] = useState(false);
@@ -32,9 +33,16 @@ export function BoardDetailClient({ boardId }: { boardId: string }) {
   const [desc, setDesc] = useState("");
 
   useEffect(() => {
-    if (!currentUser) router.push("/login");
-  }, [currentUser, router]);
+    if (ready && !currentUser) router.push("/login");
+  }, [ready, currentUser, router]);
 
+  if (!ready) {
+    return (
+      <div className="grid min-h-[50vh] place-items-center text-sm text-slate-500">
+        Loading workspace...
+      </div>
+    );
+  }
   if (!currentUser) {
     return (
       <div className="grid min-h-[50vh] place-items-center text-sm text-white/80">

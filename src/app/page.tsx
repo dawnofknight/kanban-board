@@ -5,13 +5,15 @@ import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 
 export default function Home() {
+  const ready = useStore((s) => s.ready);
   const currentUserId = useStore((s) => s.currentUserId);
   const router = useRouter();
 
   useEffect(() => {
+    if (!ready) return;
     if (currentUserId) router.replace("/boards");
     else router.replace("/login");
-  }, [currentUserId, router]);
+  }, [ready, currentUserId, router]);
 
   return (
     <div className="grid min-h-[60vh] place-items-center">

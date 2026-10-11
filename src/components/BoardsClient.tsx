@@ -10,6 +10,7 @@ import { Avatar } from "@/components/Avatar";
 
 export function BoardsClient() {
   const user = useCurrentUser();
+  const ready = useStore((s) => s.ready);
   const boards = useStore((s) => s.boards);
   const cards = useStore((s) => s.cards);
   const lists = useStore((s) => s.lists);
@@ -26,8 +27,8 @@ export function BoardsClient() {
   const [showArchived, setShowArchived] = useState(false);
 
   useEffect(() => {
-    if (!user) router.push("/login");
-  }, [user, router]);
+    if (ready && !user) router.push("/login");
+  }, [ready, user, router]);
 
   const visible = useMemo(() => {
     return boards.filter((b) => {
@@ -41,6 +42,13 @@ export function BoardsClient() {
     });
   }, [boards, user, q, showArchived]);
 
+  if (!ready) {
+    return (
+      <div className="grid min-h-[50vh] place-items-center text-sm text-slate-500">
+        Loading workspace...
+      </div>
+    );
+  }
   if (!user) {
     return (
       <div className="grid min-h-[50vh] place-items-center text-sm text-slate-500">

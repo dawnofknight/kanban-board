@@ -9,6 +9,7 @@ import { isOverdue, cn } from "@/lib/utils";
 
 export function DashboardClient() {
   const user = useCurrentUser();
+  const ready = useStore((s) => s.ready);
   const boards = useStore((s) => s.boards);
   const cards = useStore((s) => s.cards);
   const lists = useStore((s) => s.lists);
@@ -18,9 +19,16 @@ export function DashboardClient() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!user) router.push("/login");
-  }, [user, router]);
+    if (ready && !user) router.push("/login");
+  }, [ready, user, router]);
 
+  if (!ready) {
+    return (
+      <div className="grid min-h-[50vh] place-items-center text-sm text-slate-500">
+        Loading workspace...
+      </div>
+    );
+  }
   if (!user) {
     return (
       <div className="grid min-h-[50vh] place-items-center text-sm text-slate-500">

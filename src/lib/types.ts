@@ -89,3 +89,44 @@ export interface Activity {
   text: string;
   createdAt: string;
 }
+
+/** Client → server mutation intents. IDs are generated client-side so the
+ *  optimistic UI and D1 rows stay identical without a refetch. */
+export type CardOrderUpdate = { id: string; listId: string; order: number; completed?: boolean };
+export type ListOrderUpdate = { id: string; order: number };
+
+export type MutateOp =
+  | { op: "createBoard"; board: Board; lists: List[]; activity: Activity }
+  | {
+      op: "updateBoard";
+      id: string;
+      patch: Partial<Pick<Board, "title" | "description" | "background" | "favorite" | "archived">>;
+      memberIds?: string[];
+      clientIds?: string[];
+    }
+  | { op: "deleteBoard"; id: string }
+  | { op: "createList"; list: List }
+  | { op: "updateList"; id: string; title: string }
+  | { op: "deleteList"; id: string; cardIds: string[] }
+  | { op: "moveList"; boardId: string; updates: ListOrderUpdate[] }
+  | { op: "createCard"; card: Card; activity: Activity }
+  | {
+      op: "updateCard";
+      id: string;
+      patch: Partial<Pick<Card, "title" | "description" | "dueDate" | "completed" | "archived">>;
+      labelIds?: LabelColor[];
+      memberIds?: string[];
+    }
+  | { op: "deleteCard"; id: string }
+  | { op: "archiveCard"; id: string; archived: boolean; activity: Activity }
+  | { op: "moveCard"; boardId: string; updates: CardOrderUpdate[]; activity: Activity }
+  | { op: "toggleLabel"; cardId: string; labelIds: LabelColor[] }
+  | { op: "addChecklistItem"; item: ChecklistItem }
+  | { op: "toggleChecklistItem"; id: string; done: boolean }
+  | { op: "deleteChecklistItem"; id: string }
+  | { op: "addComment"; comment: Comment; activity: Activity }
+  | { op: "deleteComment"; id: string }
+  | { op: "addTimeLog"; log: TimeLog; activity: Activity }
+  | { op: "deleteTimeLog"; id: string }
+  | { op: "updateUserRole"; userId: string; role: Role }
+  | { op: "resetDemo" };

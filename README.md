@@ -23,18 +23,37 @@ npm run dev
 # open http://localhost:3000
 ```
 
-## Publish on Vercel
-Option A — from GitHub (recommended):
-1. Commit + push this folder to GitHub (`kanban-board` repo).
-2. Go to [vercel.com/new](https://vercel.com/new) → Import the repo.
-3. Framework preset: **Next.js**. Build command: `npm run build`. Output: `.next`. No env vars needed.
-4. Deploy. Every push to `main` redeploys automatically.
+## Data & hosting: Cloudflare Workers + D1
 
-Option B — from CLI:
+Boards, cards, comments, time logs and activity live in **Cloudflare D1** (SQLite, never sleeps).
+Auth is D1 users + httpOnly cookie sessions with bcrypt password hashes. Roles from before
+(`admin` / `member` / `client`) are enforced server-side — clients can only read + comment.
+
+### Run locally (with local D1, no account needed)
 ```bash
-npx vercel        # link + preview deploy
-npx vercel --prod # production deploy
+pnpm install
+pnpm db:migrate:local                              # create tables in local D1
+pnpm dlx wrangler d1 execute kanban-board-db --local --file=db/seed.sql   # demo data
+pnpm dev                                           # open http://localhost:3000
 ```
+Demo logins (password: `password`): `admin@example.com`, `member@example.com`, `client@example.com`.
+
+> Local D1 state is keyed by `database_id`: if you change it in `wrangler.jsonc`,
+> re-run migrate + seed with `--local` to refill the new local database.
+> Next.js is pinned to 16.3.x — the OpenNext adapter has an unreleased upstream bug
+> with 16.4 (`preview-props.json` loadManifest crash, upstream PR #1356).
+
+### Publish on Cloudflare (one-time setup)
+```bash
+pnpm dlx wrangler login                            # browser OAuth, needs a Cloudflare account
+pnpm dlx wrangler d1 create kanban-board-db        # copy the database_id into wrangler.jsonc
+pnpm db:migrate:remote                             # create tables in production D1
+node db/seed.mjs && pnpm dlx wrangler d1 execute kanban-board-db --remote --file=db/seed.sql
+pnpm deploy                                        # build + deploy the Worker
+```
+Every subsequent deploy is just `pnpm deploy`. Or connect the GitHub repo in the
+Cloudflare dashboard (Workers → Create → connect repo, build command `pnpm deploy`-equivalent:
+`opennextjs-cloudflare build && opennextjs-cloudflare deploy`) for auto-deploys on push.
 
 ## Notes / next upgrades
 - Auth + data are **local demo only** (plain passwords in localStorage). For real multi-user: migrate store to Supabase/Postgres + NextAuth/Supabase Auth — the `src/lib/store.ts` action layer is already shaped for that swap.

@@ -7,6 +7,7 @@ import { initials, cn } from "@/lib/utils";
 
 export function UsersClient() {
   const user = useCurrentUser();
+  const ready = useStore((s) => s.ready);
   const users = useStore((s) => s.users);
   const boards = useStore((s) => s.boards);
   const updateUserRole = useStore((s) => s.updateUserRole);
@@ -15,9 +16,16 @@ export function UsersClient() {
   const [shareBoardId, setShareBoardId] = useState<string>("");
 
   useEffect(() => {
-    if (!user) router.push("/login");
-  }, [user, router]);
+    if (ready && !user) router.push("/login");
+  }, [ready, user, router]);
 
+  if (!ready) {
+    return (
+      <div className="grid min-h-[50vh] place-items-center text-sm text-slate-500">
+        Loading workspace...
+      </div>
+    );
+  }
   if (!user) {
     return (
       <div className="grid min-h-[50vh] place-items-center text-sm text-slate-500">
