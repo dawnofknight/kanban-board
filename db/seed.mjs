@@ -15,8 +15,8 @@ const b = (v) => (v ? 1 : 0);
 const rows = [];
 rows.push(`-- TaskBoard demo seed (all demo passwords: "password")`);
 rows.push(`INSERT INTO users (id,name,email,password_hash,role,avatar_color) VALUES
-  ('u_admin','Ava Admin','admin@example.com','${passwordHash}','admin','bg-violet-600'),
-  ('u_member','Milo Member','member@example.com','${passwordHash}','member','bg-blue-600'),
+  ('u_admin','Fajar Satria','admin@example.com','${passwordHash}','admin','bg-violet-600'),
+  ('u_member','Dustin Bird','member@example.com','${passwordHash}','member','bg-blue-600'),
   ('u_client','Cora Client','client@example.com','${passwordHash}','client','bg-emerald-600');`);
 rows.push(`INSERT INTO boards (id,title,description,background,favorite,archived,created_at,updated_at) VALUES
   ('b_website','Website Redesign — Acme Corp','Full redesign: homepage, pricing, blog. Client reviews every Friday.','from-blue-600 to-indigo-700',1,0,${q(t(-14))},${q(t(-1))}),

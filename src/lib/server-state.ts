@@ -1,4 +1,5 @@
 import { eq, inArray } from "drizzle-orm";
+import { hashSync } from "bcryptjs";
 import {
   activities,
   boardMembers,
@@ -9,6 +10,7 @@ import {
   checklistItems,
   comments,
   lists,
+  sessions,
   timeLogs,
   users,
 } from "../../db/schema";
@@ -239,6 +241,11 @@ export async function applyOp(db: Db, user: SafeUser, op: MutateOp): Promise<voi
     user.role === "client" && op.op !== "addComment";
   if (clientOnlyComment) throw new ApiError(403, "Clients can only comment");
   if (op.op === "updateUserRole" && user.role !== "admin") throw new ApiError(403, "Admins only");
+  if (
+    (op.op === "createUser" || op.op === "updateUser" || op.op === "deleteUser") &&
+    user.role !== "admin"
+  )
+    throw new ApiError(403, "Admins only");
   if (op.op === "resetDemo" && user.role !== "admin") throw new ApiError(403, "Admins only");
 
   switch (op.op) {
@@ -447,6 +454,54 @@ export async function applyOp(db: Db, user: SafeUser, op: MutateOp): Promise<voi
     }
     case "updateUserRole": {
       await db.update(users).set({ role: op.role }).where(eq(users.id, op.userId));
+      break;
+    }
+    case "createUser": {
+      const name = op.name.trim();
+      const email = op.email.trim();
+      if (!name || !email || !op.password || op.password.length < 6)
+        throw new ApiError(400, "Name, email and a 6+ character password are required");
+      if (op.role !== "admin" && op.role !== "member" && op.role !== "client")
+        throw new ApiError(400, "Invalid role");
+      const all = await db.select().from(users);
+      if (all.some((u) => u.email.toLowerCase() === email.toLowerCase()))
+        throw new ApiError(409, "Email already registered");
+      const colors = ["bg-blue-600", "bg-rose-600", "bg-amber-600", "bg-teal-600", "bg-indigo-600"];
+      await db.insert(users).values({
+        id: crypto.randomUUID(),
+        name,
+        email,
+        passwordHash: hashSync(op.password, 10),
+        role: op.role,
+        avatarColor: colors[all.length % colors.length],
+      });
+      break;
+    }
+    case "updateUser": {
+      const rows = await db.select().from(users).where(eq(users.id, op.userId)).limit(1);
+      if (!rows[0]) throw new ApiError(404, "User not found");
+      const patch: Partial<typeof users.$inferInsert> = {};
+      if (op.name !== undefined) {
+        if (!op.name.trim()) throw new ApiError(400, "Name cannot be empty");
+        patch.name = op.name.trim();
+      }
+      if (op.email !== undefined) {
+        const email = op.email.trim();
+        if (!email) throw new ApiError(400, "Email cannot be empty");
+        const all = await db.select().from(users);
+        if (all.some((u) => u.id !== op.userId && u.email.toLowerCase() === email.toLowerCase()))
+          throw new ApiError(409, "Email already registered");
+        patch.email = email;
+      }
+      if (Object.keys(patch).length) await db.update(users).set(patch).where(eq(users.id, op.userId));
+      break;
+    }
+    case "deleteUser": {
+      if (op.userId === user.id) throw new ApiError(400, "You cannot delete your own account");
+      await db.delete(sessions).where(eq(sessions.userId, op.userId));
+      await db.delete(boardMembers).where(eq(boardMembers.userId, op.userId));
+      await db.delete(cardMembers).where(eq(cardMembers.userId, op.userId));
+      await db.delete(users).where(eq(users.id, op.userId));
       break;
     }
     case "resetDemo": {

@@ -129,7 +129,7 @@ export function DashboardClient() {
               const b = boards.find((x) => x.id === a.boardId);
               return (
                 <li key={a.id} className="rounded-xl bg-slate-50 p-3 text-xs">
-                  <span className="font-semibold">{u?.name}</span> {a.text}
+                  <span className="font-semibold">{u?.name ?? "Removed user"}</span> {a.text}
                   <div className="mt-1 text-[11px] text-slate-400">
                     {b?.title} · {new Date(a.createdAt).toLocaleString()}
                   </div>

@@ -145,4 +145,7 @@ export type MutateOp =
   | { op: "addTimeLog"; log: TimeLog; activity: Activity }
   | { op: "deleteTimeLog"; id: string }
   | { op: "updateUserRole"; userId: string; role: Role }
+  | { op: "createUser"; name: string; email: string; password: string; role: Role }
+  | { op: "updateUser"; userId: string; name?: string; email?: string }
+  | { op: "deleteUser"; userId: string }
   | { op: "resetDemo" };

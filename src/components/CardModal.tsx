@@ -283,7 +283,7 @@ export function CardModal() {
                     <div key={t.id} className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm shadow-sm">
                       <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-800">{t.hours}h</span>
                       <span className="flex-1">
-                        {t.note} <span className="text-xs text-slate-400">· {u?.name} · {t.date}</span>
+                        {t.note} <span className="text-xs text-slate-400">· {u?.name ?? "Removed user"} · {t.date}</span>
                       </span>
                       {!isClient && (
                         <button onClick={() => deleteTimeLog(t.id)} className="text-slate-300 hover:text-red-500">
@@ -370,8 +370,10 @@ export function CardModal() {
                   return (
                     <div key={c.id} className="rounded-lg bg-white p-3 text-sm shadow-sm">
                       <div className="mb-1 flex items-center gap-2">
-                        <span className="font-semibold">{u?.name}</span>
-                        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] uppercase text-slate-500">{u?.role}</span>
+                        <span className="font-semibold">{u?.name ?? "Removed user"}</span>
+                        {u && (
+                          <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] uppercase text-slate-500">{u.role}</span>
+                        )}
                         <span className="ml-auto text-[11px] text-slate-400">{formatDateTime(c.createdAt)}</span>
                         {currentUser?.id === c.userId && (
                           <button onClick={() => deleteComment(c.id)} className="text-slate-300 hover:text-red-500">

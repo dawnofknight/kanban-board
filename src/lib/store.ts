@@ -37,6 +37,9 @@ interface State {
   logout: () => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<string | null>;
   importWorkspace: (data: unknown) => Promise<string | null>;
+  createUser: (name: string, email: string, password: string, role: User["role"]) => Promise<string | null>;
+  updateUser: (userId: string, patch: { name?: string; email?: string }) => void;
+  deleteUser: (userId: string) => Promise<string | null>;
   updateUserRole: (userId: string, role: User["role"]) => void;
 
   setActiveBoard: (id: string | null) => void;
@@ -216,6 +219,36 @@ export const useStore = create<State>()((set, get) => ({
   updateUserRole: (userId, role) => {
     set({ users: get().users.map((u) => (u.id === userId ? { ...u, role } : u)) });
     sync({ op: "updateUserRole", userId, role });
+  },
+  createUser: async (name, email, password, role) => {
+    const res = await fetch("/api/mutate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ op: "createUser", name, email, password, role }),
+    });
+    if (!res.ok) {
+      const err = (await res.json().catch(() => null)) as { error?: string } | null;
+      return err?.error ?? "Failed to create user";
+    }
+    await get().bootstrap();
+    return null;
+  },
+  updateUser: (userId, patch) => {
+    set({ users: get().users.map((u) => (u.id === userId ? { ...u, ...patch } : u)) });
+    sync({ op: "updateUser", userId, ...patch });
+  },
+  deleteUser: async (userId) => {
+    const res = await fetch("/api/mutate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ op: "deleteUser", userId }),
+    });
+    if (!res.ok) {
+      const err = (await res.json().catch(() => null)) as { error?: string } | null;
+      return err?.error ?? "Failed to delete user";
+    }
+    await get().bootstrap();
+    return null;
   },
 
   setActiveBoard: (id) => set({ activeBoardId: id }),

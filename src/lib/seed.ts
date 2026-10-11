@@ -7,8 +7,8 @@ const t = (daysOffset: number) => {
 };
 
 export const seedUsers: User[] = [
-  { id: "u_admin", name: "Ava Admin", email: "admin@example.com", password: "password", role: "admin", avatarColor: "bg-violet-600" },
-  { id: "u_member", name: "Milo Member", email: "member@example.com", password: "password", role: "member", avatarColor: "bg-blue-600" },
+  { id: "u_admin", name: "Fajar Satria", email: "admin@example.com", password: "password", role: "admin", avatarColor: "bg-violet-600" },
+  { id: "u_member", name: "Dustin Bird", email: "member@example.com", password: "password", role: "member", avatarColor: "bg-blue-600" },
   { id: "u_client", name: "Cora Client", email: "client@example.com", password: "password", role: "client", avatarColor: "bg-emerald-600" },
 ];
 

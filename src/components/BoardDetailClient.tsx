@@ -189,7 +189,7 @@ export function BoardDetailClient({ boardId }: { boardId: string }) {
                   const u = users.find((x) => x.id === a.userId);
                   return (
                     <li key={a.id}>
-                      <span className="font-semibold">{u?.name}</span> {a.text} ·{" "}
+                      <span className="font-semibold">{u?.name ?? "Removed user"}</span> {a.text} ·{" "}
                       <span className="text-white/60">{new Date(a.createdAt).toLocaleString()}</span>
                     </li>
                   );
