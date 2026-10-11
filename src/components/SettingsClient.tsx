@@ -2,14 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, CheckCircle2 } from "lucide-react";
+import { KeyRound, CheckCircle2, Download, Upload } from "lucide-react";
 import { useStore, useCurrentUser } from "@/lib/store";
 import { initials, cn } from "@/lib/utils";
+import { downloadJson } from "@/lib/download";
 
 export function SettingsClient() {
   const user = useCurrentUser();
   const ready = useStore((s) => s.ready);
   const changePassword = useStore((s) => s.changePassword);
+  const importWorkspace = useStore((s) => s.importWorkspace);
+  const importMessage = useStore((s) => s.importMessage);
   const router = useRouter();
 
   const [current, setCurrent] = useState("");
@@ -18,6 +21,8 @@ export function SettingsClient() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importBusy, setImportBusy] = useState(false);
 
   useEffect(() => {
     if (ready && !user) router.push("/login");
@@ -36,6 +41,21 @@ export function SettingsClient() {
         Redirecting to login...
       </div>
     );
+  }
+
+  async function importFile(file: File) {
+    setImportError(null);
+    setImportBusy(true);
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text) as unknown;
+      const err = await importWorkspace(data);
+      if (err) setImportError(err);
+    } catch {
+      setImportError("Could not read that file — is it a TaskBoard export?");
+    } finally {
+      setImportBusy(false);
+    }
   }
 
   async function submit(e: React.FormEvent) {
@@ -130,6 +150,49 @@ export function SettingsClient() {
           </button>
         </div>
       </form>
+
+      <div className="mt-4 rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="font-bold">Backup</h2>
+        <p className="mt-1 text-xs text-slate-500">
+          Download your boards as JSON, or restore from an export file. Imports create
+          copies under new IDs — members are matched to existing accounts.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            onClick={() =>
+              downloadJson(
+                "/api/export?scope=all",
+                `taskboard-backup-${new Date().toISOString().slice(0, 10)}.json`
+              )
+            }
+            className="flex items-center gap-1 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
+          >
+            <Download className="h-4 w-4" /> Export workspace
+          </button>
+          {user.role !== "client" && (
+            <label className="flex cursor-pointer items-center gap-1 rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200">
+              <Upload className="h-4 w-4" /> {importBusy ? "Importing..." : "Import JSON"}
+              <input
+                type="file"
+                accept="application/json,.json"
+                className="hidden"
+                disabled={importBusy}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = "";
+                  if (f) void importFile(f);
+                }}
+              />
+            </label>
+          )}
+        </div>
+        {importError && <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{importError}</p>}
+        {importMessage && (
+          <p className="mt-2 flex items-center gap-1 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">
+            <CheckCircle2 className="h-4 w-4" /> {importMessage}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

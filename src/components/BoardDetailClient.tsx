@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Star, Users, Settings2 } from "lucide-react";
+import { ArrowLeft, Star, Users, Settings2, Download } from "lucide-react";
 import { useStore, useCurrentUser } from "@/lib/store";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { CardModal } from "@/components/CardModal";
 import { cn } from "@/lib/utils";
+import { downloadJson, slugify } from "@/lib/download";
 import { Avatar } from "@/components/Avatar";
 
 export function BoardDetailClient({ boardId }: { boardId: string }) {
@@ -96,6 +97,18 @@ export function BoardDetailClient({ boardId }: { boardId: string }) {
               <Settings2 className="h-4 w-4" /> Board settings
             </button>
           )}
+          <button
+            onClick={() =>
+              downloadJson(
+                `/api/export?boardId=${board.id}`,
+                `taskboard-${slugify(board.title)}-${new Date().toISOString().slice(0, 10)}.json`
+              )
+            }
+            className="flex items-center gap-1 rounded-lg bg-white/15 px-3 py-2 text-xs font-semibold hover:bg-white/25"
+            title="Download this board as JSON"
+          >
+            <Download className="h-4 w-4" /> Export
+          </button>
           {isClient && (
             <span className="rounded-full bg-emerald-400/20 px-3 py-1 text-xs font-semibold text-emerald-100 ring-1 ring-emerald-200/40">
               Client view · read-only

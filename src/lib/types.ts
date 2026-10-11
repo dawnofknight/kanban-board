@@ -90,6 +90,22 @@ export interface Activity {
   createdAt: string;
 }
 
+/** Portable backup format for board / workspace import-export. */
+export interface ExportBundle {
+  kind: "taskboard-export";
+  version: 1;
+  exportedAt: string;
+  exportedBy: string;
+  users: { id: string; name: string; email: string; role: Role; avatarColor: string }[];
+  boards: Board[];
+  lists: List[];
+  cards: Card[];
+  checklist: ChecklistItem[];
+  comments: Comment[];
+  timeLogs: TimeLog[];
+  activities: Activity[];
+}
+
 /** Client → server mutation intents. IDs are generated client-side so the
  *  optimistic UI and D1 rows stay identical without a refetch. */
 export type CardOrderUpdate = { id: string; listId: string; order: number; completed?: boolean };

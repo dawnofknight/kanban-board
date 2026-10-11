@@ -29,12 +29,14 @@ interface State {
   activeCardId: string | null;
   filters: Filters;
   ready: boolean;
+  importMessage: string | null;
 
   bootstrap: () => Promise<void>;
   login: (email: string, password: string) => Promise<string | null>;
   register: (name: string, email: string, password: string, role?: User["role"]) => Promise<string | null>;
   logout: () => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<string | null>;
+  importWorkspace: (data: unknown) => Promise<string | null>;
   updateUserRole: (userId: string, role: User["role"]) => void;
 
   setActiveBoard: (id: string | null) => void;
@@ -115,6 +117,7 @@ export const useStore = create<State>()((set, get) => ({
   activeCardId: null,
   filters: { search: "", labels: [], memberId: null, due: "all", showArchived: false },
   ready: false,
+  importMessage: null,
 
   bootstrap: () => {
     if (bootstrapInflight) return bootstrapInflight;
@@ -192,6 +195,22 @@ export const useStore = create<State>()((set, get) => ({
       const data = (await res.json().catch(() => null)) as { error?: string } | null;
       return data?.error ?? "Failed to change password";
     }
+    return null;
+  },
+  importWorkspace: async (data) => {
+    set({ importMessage: null });
+    const res = await fetch("/api/import", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const err = (await res.json().catch(() => null)) as { error?: string } | null;
+      return err?.error ?? "Import failed";
+    }
+    const done = (await res.json().catch(() => null)) as { boards?: number; cards?: number } | null;
+    await get().bootstrap();
+    set({ importMessage: `Imported ${done?.boards ?? 0} boards, ${done?.cards ?? 0} cards` });
     return null;
   },
   updateUserRole: (userId, role) => {
